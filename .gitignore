@@ -1,0 +1,14 @@
+# Betriebssystem
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Temporäres
+*.tmp
+*.bak
+~$*

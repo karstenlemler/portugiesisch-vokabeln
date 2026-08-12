@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Português — Vokabeltrainer A1/A2</title>
+<style>
+  :root {
+    --bg: #FBF6EE;
+    --card: #FFFFFF;
+    --ink: #2B2B2B;
+    --muted: #7A7167;
+    --teal: #1E8F87;
+    --teal-dark: #16706A;
+    --teal-soft: #E4F2F0;
+    --coral: #F2704E;
+    --coral-soft: #FCE7DF;
+    --yellow: #F6C453;
+    --azulejo: #2A5DA8;
+    --line: #EDE4D6;
+    --good: #2FA36B;
+    --bad: #D9534F;
+    --shadow: 0 10px 30px rgba(43, 43, 43, 0.08);
+    --radius: 20px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background-color: var(--bg);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%232A5DA8' stroke-opacity='0.09' stroke-width='1.2'%3E%3Cpath d='M28 5 C33 15 41 23 51 28 C41 33 33 41 28 51 C23 41 15 33 5 28 C15 23 23 15 28 5 Z'/%3E%3Ccircle cx='28' cy='28' r='4.5'/%3E%3Ccircle cx='0' cy='0' r='7'/%3E%3Ccircle cx='56' cy='0' r='7'/%3E%3Ccircle cx='0' cy='56' r='7'/%3E%3Ccircle cx='56' cy='56' r='7'/%3E%3C/g%3E%3C/svg%3E");
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 20px 18px 64px; }
+
+  /* Hero */
+  .hero {
+    border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--line); box-shadow: var(--shadow);
+    margin-bottom: 16px; background: #AEDCEF;
+  }
+  .hero svg { display: block; width: 100%; height: auto; }
+
+  header.top { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .logo {
+    width: 52px; height: 36px; border-radius: 8px; overflow: hidden;
+    box-shadow: 0 4px 12px rgba(43,43,43,.18); flex: none; line-height: 0;
+  }
+  .logo svg { width: 100%; height: 100%; display: block; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+  /* Mode tabs */
+  .segment {
+    display: flex; gap: 5px; background: #F1E8DA;
+    padding: 6px; border-radius: 16px; margin: 16px 0 10px;
+  }
+  .segment button {
+    flex: 1; border: none; background: transparent; color: var(--muted);
+    font-size: 13.5px; font-weight: 600; padding: 10px 4px;
+    border-radius: 11px; cursor: pointer; transition: all .15s ease; white-space: nowrap;
+  }
+  .segment button.active { background: var(--card); color: var(--teal-dark); box-shadow: 0 2px 8px rgba(43,43,43,.08); }
+  .segment button:hover:not(.active) { color: var(--ink); }
+
+  /* Scope bar */
+  .scope-bar {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--teal-soft); border: 1px solid #CFE8E4;
+    border-radius: 14px; padding: 11px 14px; margin-bottom: 14px;
+  }
+  .scope-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--teal-dark); font-weight: 700; }
+  .scope-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+  .scope-bar > div:first-child { flex: 1; min-width: 0; }
+  .scope-change {
+    flex: none; border: 1px solid var(--teal); background: #fff; color: var(--teal-dark);
+    font-size: 12.5px; font-weight: 700; padding: 8px 13px; border-radius: 10px; cursor: pointer;
+  }
+  .scope-change:hover { background: var(--teal); color: #fff; }
+
+  /* Direction toggle */
+  .dir-row {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-bottom: 16px; font-size: 13px; color: var(--muted); font-weight: 600;
+  }
+  .dir-toggle { display: inline-flex; gap: 4px; background: #F1E8DA; padding: 4px; border-radius: 12px; }
+  .dir-toggle button {
+    border: none; background: transparent; color: var(--muted);
+    font-size: 12.5px; font-weight: 700; padding: 7px 12px; border-radius: 9px; cursor: pointer; transition: all .15s ease;
+  }
+  .dir-toggle button.active { background: var(--azulejo); color: #fff; box-shadow: 0 2px 8px rgba(42,93,168,.3); }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ---------- Lektions-Übersicht ---------- */
+  .ov-head { display: flex; align-items: baseline; justify-content: space-between; margin: 4px 0 12px; gap: 12px; flex-wrap: wrap; }
+  .ov-head h2 { font-size: 18px; margin: 0; }
+  .level-summary { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px; }
+  .lesson-card {
+    text-align: left; border: 1.5px solid var(--line); background: var(--card);
+    border-radius: 16px; padding: 14px 15px; cursor: pointer; font: inherit; color: inherit;
+    transition: all .15s ease; box-shadow: 0 2px 8px rgba(43,43,43,.04);
+  }
+  .lesson-card:hover { border-color: var(--teal); transform: translateY(-2px); box-shadow: var(--shadow); }
+  .lesson-card.active { border-color: var(--teal); background: var(--teal-soft); }
+  .lesson-card.done { border-color: #BCE3CE; background: #F2FAF6; }
+  .lc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .lc-emoji { font-size: 18px; }
+  .lc-nr { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .lc-check { margin-left: auto; color: var(--good); font-weight: 800; }
+  .lc-title { font-weight: 700; font-size: 15px; line-height: 1.3; margin-bottom: 10px; min-height: 39px; }
+  .lc-bar { height: 7px; background: #EFE6D8; border-radius: 999px; overflow: hidden; }
+  .lc-bar span { display: block; height: 100%; background: var(--good); border-radius: 999px; transition: width .4s ease; }
+  .lc-meta { display: flex; justify-content: space-between; margin-top: 7px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+  .lc-pct { color: var(--teal-dark); }
+  .scope-shortcuts { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+  .shortcut-btn {
+    flex: 1; min-width: 200px; border: 1px dashed #CFC4B2; background: transparent; color: var(--muted);
+    font-size: 13.5px; font-weight: 600; padding: 13px; border-radius: 14px; cursor: pointer;
+  }
+  .shortcut-btn:hover { border-color: var(--teal); color: var(--teal-dark); background: var(--card); }
+
+  /* ---------- Statistik ---------- */
+  .stats { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; box-shadow: var(--shadow); }
+  .stats-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; gap: 10px; }
+  .stats-title { font-weight: 700; font-size: 15px; }
+  .stats-sub { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .stats-pct { font-weight: 800; color: var(--teal-dark); font-size: 15px; }
+  .bar { height: 10px; background: #EFE6D8; border-radius: 999px; overflow: hidden; display: flex; }
+  .bar > div { height: 100%; transition: width .4s ease; }
+  .bar > .seg-known { background: var(--good); }
+  .bar > .seg-progress { background: #8FCDA8; }
+  .bar > .seg-wrong { background: #F0A03C; }
+  .bar > .seg-new { background: #E28B84; }
+  .legend { display: flex; gap: 14px; margin-top: 12px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot.known { background: var(--good); }
+  .dot.progress { background: #8FCDA8; }
+  .dot.wrong { background: #F0A03C; }
+  .dot.new { background: #E28B84; }
+
+  /* Ampel-Minibalken */
+  .mini-track { width: 52px; height: 9px; border-radius: 999px; background: #EFE6D8; overflow: hidden; flex: none; display: inline-block; }
+  .mini-track .mini-fill { display: block; height: 100%; border-radius: 999px; transition: width .3s ease; }
+  .li-bar { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
+  .bar-text { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .learn-bar-row { display: flex; align-items: center; gap: 8px; margin: -4px 0 14px; }
+
+  /* ---------- Karten ---------- */
+  .card-stage { perspective: 1400px; }
+  .flashcard { position: relative; width: 100%; min-height: 310px; cursor: pointer; transform-style: preserve-3d; transition: transform .5s cubic-bezier(.4,.2,.2,1); }
+  .flashcard.flipped { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; text-align: center;
+  }
+  .face.back { transform: rotateY(180deg); background: var(--teal-soft); border-color: #CFE8E4; }
+  .pill {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--teal-dark); background: var(--teal-soft); padding: 5px 12px; border-radius: 999px; margin-bottom: 12px;
+  }
+  .face.back .pill { background: #fff; color: var(--coral); }
+  .word-pt { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: var(--ink); }
+  .word-de { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; color: var(--teal-dark); }
+  .word-sub { color: var(--muted); font-size: 15px; margin-top: 10px; }
+  .tap-hint { position: absolute; bottom: 16px; font-size: 12px; color: var(--muted); }
+  .queue-badge { position: absolute; top: 14px; right: 16px; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+
+  .speak-btn {
+    margin-top: 20px; border: none; background: var(--coral); color: #fff;
+    font-size: 15px; font-weight: 700; padding: 12px 22px; border-radius: 999px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 9px;
+    box-shadow: 0 6px 16px rgba(242,112,78,.35); transition: transform .1s ease, background .15s ease;
+  }
+  .speak-btn:hover { background: #e8623f; }
+  .speak-btn:active { transform: scale(.96); }
+  .speak-btn.playing { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 6px 24px rgba(242,112,78,.6); } }
+
+  .nav-row { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
+  .nav-btn {
+    flex: 1; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    font-size: 15px; font-weight: 600; padding: 13px; border-radius: 14px; cursor: pointer; transition: all .15s ease;
+  }
+  .nav-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+  .nav-btn.ghost { flex: none; padding: 13px 16px; }
+  .counter { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 14px; font-weight: 600; min-width: 72px; text-align: center; }
+  .progress { height: 6px; background: #EFE6D8; border-radius: 999px; overflow: hidden; margin-top: 18px; }
+  .progress > div { height: 100%; background: var(--teal); width: 0; transition: width .3s ease; }
+
+  .learn-actions { display: flex; gap: 12px; margin-top: 20px; }
+  .learn-btn { flex: 1; border: none; font-size: 16px; font-weight: 700; padding: 15px; border-radius: 14px; cursor: pointer; transition: transform .1s ease, filter .15s ease; }
+  .learn-btn:active { transform: scale(.97); }
+  .learn-btn.again { background: var(--coral-soft); color: var(--coral); }
+  .learn-btn.good { background: var(--good); color: #fff; box-shadow: 0 6px 16px rgba(47,163,107,.3); }
+  .learn-btn.good:hover { filter: brightness(1.04); }
+  .reveal-hint-btn {
+    margin-top: 18px; width: 100%; border: 1px dashed #CFC4B2; background: transparent; color: var(--muted);
+    font-size: 14px; font-weight: 600; padding: 13px; border-radius: 14px; cursor: pointer;
+  }
+  .reveal-hint-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+  .empty-state { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 40px 24px; text-align: center; }
+  .empty-state .big { font-size: 44px; margin-bottom: 8px; }
+  .empty-state h3 { margin: 0 0 6px; font-size: 20px; }
+  .empty-state p { color: var(--muted); margin: 0 0 4px; font-size: 14px; }
+  .link-btn { background: none; border: none; color: var(--teal-dark); font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
+  .reset-row { text-align: center; margin-top: 14px; }
+
+  /* Quiz + Schreiben */
+  .quiz-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--line); padding: 26px 22px; text-align: center; }
+  .quiz-prompt-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .quiz-word { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 8px 0 4px; }
+  .options { display: grid; gap: 10px; margin-top: 22px; }
+  .option {
+    border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+    font-size: 16px; font-weight: 600; padding: 15px; border-radius: 14px; cursor: pointer; text-align: left; transition: all .12s ease;
+  }
+  .option:hover:not(:disabled) { border-color: var(--teal); background: var(--teal-soft); }
+  .option:disabled { cursor: default; }
+  .option.correct { border-color: var(--good); background: #E6F5EE; color: #1c7a4d; }
+  .option.wrong { border-color: var(--bad); background: #FBEAEA; color: #b23b37; }
+  .scorebar { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; color: var(--muted); font-size: 14px; font-weight: 600; }
+  .score-num { color: var(--teal-dark); }
+
+  .type-input {
+    width: 100%; border: 1.5px solid var(--line); background: #FDFBF7; border-radius: 14px;
+    padding: 14px 16px; font-size: 18px; font-weight: 600; color: var(--ink); outline: none; margin-top: 18px; text-align: center;
+  }
+  .type-input:focus { border-color: var(--azulejo); }
+  .accents { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 12px; }
+  .acc-btn { border: 1px solid var(--line); background: var(--card); border-radius: 9px; padding: 7px 11px; font-size: 15px; font-weight: 600; color: var(--azulejo); cursor: pointer; transition: all .12s ease; }
+  .acc-btn:hover { background: var(--azulejo); color: #fff; border-color: var(--azulejo); }
+  .fb { margin-top: 16px; border-radius: 12px; padding: 13px 14px; font-weight: 600; font-size: 15px; display: none; line-height: 1.5; }
+  .fb.show { display: block; }
+  .fb.right { background: #E6F5EE; color: #1c7a4d; border: 1px solid #BCE3CE; }
+  .fb.almost { background: #FFF6E0; color: #8a6d1f; border: 1px solid #F0DCA8; }
+  .fb.wrong { background: #FBEAEA; color: #b23b37; border: 1px solid #F0C7C5; }
+  .fb .fb-word { font-size: 20px; font-weight: 800; }
+
+  /* Liste */
+  .search { width: 100%; border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 13px 16px; font-size: 15px; color: var(--ink); outline: none; }
+  .search:focus { border-color: var(--teal); }
+  .list-head { display: flex; justify-content: flex-end; font-size: 12.5px; color: var(--muted); font-weight: 600; margin: 8px 2px 10px; }
+  .list-item { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; margin-bottom: 8px; }
+  .li-num { width: 34px; height: 34px; flex: none; border-radius: 9px; background: var(--teal-soft); display: grid; place-items: center; font-size: 16px; }
+  .li-text { flex: 1; min-width: 0; }
+  .li-pt { font-weight: 700; font-size: 16px; }
+  .li-de { color: var(--muted); font-size: 14px; }
+  .li-speak { flex: none; width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--coral-soft); color: var(--coral); cursor: pointer; font-size: 17px; display: grid; place-items: center; transition: all .12s ease; }
+  .li-speak:hover { background: var(--coral); color: #fff; }
+
+  .note { margin-top: 26px; font-size: 12.5px; color: var(--muted); text-align: center; line-height: 1.6; }
+  .warn { background: #FFF6E0; border: 1px solid #F0DCA8; color: #8a6d1f; border-radius: 12px; padding: 11px 14px; font-size: 13px; margin-bottom: 16px; display: none; }
+  .warn.show { display: block; }
+
+  @media (max-width: 520px) {
+    .lesson-grid { grid-template-columns: 1fr 1fr; }
+    .lc-title { font-size: 13.5px; min-height: 36px; }
+    .segment button { font-size: 12px; padding: 9px 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Lissabon-Panorama -->
+  <div class="hero" aria-hidden="true">
+    <svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#A9DBF0"/><stop offset="1" stop-color="#FDEBC8"/>
+        </linearGradient>
+        <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7FBCD9"/><stop offset="1" stop-color="#4D9BC4"/>
+        </linearGradient>
+      </defs>
+      <rect width="720" height="210" fill="url(#sky)"/>
+      <circle cx="606" cy="44" r="30" fill="#F6C453" opacity=".3"/>
+      <circle cx="606" cy="44" r="21" fill="#F6C453"/>
+      <g stroke="#5B6770" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M150 52 q7 -7 14 0 q7 -7 14 0"/>
+        <path d="M205 38 q6 -6 12 0 q6 -6 12 0"/>
+        <path d="M480 40 q6 -6 12 0 q6 -6 12 0"/>
+      </g>
+      <rect y="118" width="720" height="46" fill="url(#sea)"/>
+      <g stroke="#A8D4E8" stroke-width="3" stroke-linecap="round" opacity=".8">
+        <path d="M420 134 h36"/><path d="M490 146 h44"/><path d="M560 130 h32"/>
+        <path d="M620 148 h40"/><path d="M660 132 h30"/>
+      </g>
+      <g>
+        <path d="M430 103 H720" stroke="#C24438" stroke-width="6"/>
+        <path d="M500 118 V60 M640 118 V60" stroke="#C24438" stroke-width="6"/>
+        <path d="M436 100 Q500 58 570 74 Q640 58 714 100" stroke="#C24438" stroke-width="3" fill="none"/>
+        <g stroke="#C24438" stroke-width="1.6">
+          <path d="M470 84 V100"/><path d="M535 70 V100"/><path d="M570 74 V100"/>
+          <path d="M605 70 V100"/><path d="M676 82 V100"/>
+        </g>
+      </g>
+      <g>
+        <rect x="10" y="70" width="34" height="52" fill="#CDBB9C"/>
+        <path d="M10 70 h6 v-8 h6 v8 h5 v-8 h6 v8 h5 v-8 h6 v8" fill="#CDBB9C"/>
+        <rect x="22" y="86" width="9" height="13" rx="4" fill="#8A7B5E"/>
+        <rect x="52" y="88" width="42" height="76" fill="#F2D06B"/>
+        <rect x="46" y="80" width="54" height="10" fill="#C96F4A"/>
+        <rect x="94" y="76" width="44" height="88" fill="#F7F3E8"/>
+        <rect x="88" y="68" width="56" height="10" fill="#C96F4A"/>
+        <rect x="138" y="92" width="40" height="72" fill="#E8A798"/>
+        <rect x="132" y="84" width="52" height="10" fill="#B85C38"/>
+        <rect x="178" y="80" width="44" height="84" fill="#7FA8D9"/>
+        <rect x="172" y="72" width="56" height="10" fill="#C96F4A"/>
+        <rect x="222" y="96" width="38" height="68" fill="#F7F3E8"/>
+        <rect x="216" y="88" width="50" height="10" fill="#B85C38"/>
+        <g fill="#5B6770" opacity=".85">
+          <rect x="60" y="98" width="9" height="13" rx="1"/><rect x="77" y="98" width="9" height="13" rx="1"/>
+          <rect x="60" y="122" width="9" height="13" rx="1"/><rect x="77" y="122" width="9" height="13" rx="1"/>
+          <rect x="103" y="88" width="9" height="13" rx="1"/><rect x="120" y="88" width="9" height="13" rx="1"/>
+          <rect x="103" y="112" width="9" height="13" rx="1"/><rect x="120" y="112" width="9" height="13" rx="1"/>
+          <rect x="146" y="102" width="9" height="13" rx="1"/><rect x="163" y="102" width="9" height="13" rx="1"/>
+          <rect x="146" y="126" width="9" height="13" rx="1"/><rect x="163" y="126" width="9" height="13" rx="1"/>
+          <rect x="187" y="92" width="9" height="13" rx="1"/><rect x="204" y="92" width="9" height="13" rx="1"/>
+          <rect x="187" y="116" width="9" height="13" rx="1"/><rect x="204" y="116" width="9" height="13" rx="1"/>
+          <rect x="230" y="106" width="9" height="13" rx="1"/><rect x="245" y="106" width="9" height="13" rx="1"/>
+        </g>
+      </g>
+      <rect y="160" width="720" height="50" fill="#EFE6D8"/>
+      <g stroke="#C9BCA4" stroke-width="2.5" fill="none" opacity=".7">
+        <path d="M0 190 Q45 180 90 190 T180 190 T270 190 T360 190 T450 190 T540 190 T630 190 T720 190"/>
+        <path d="M0 202 Q45 194 90 202 T180 202 T270 202 T360 202 T450 202 T540 202 T630 202 T720 202"/>
+      </g>
+      <path d="M240 168 H540" stroke="#B0A48F" stroke-width="2.5"/>
+      <path d="M240 173 H540" stroke="#B0A48F" stroke-width="2.5"/>
+      <path d="M250 62 H530" stroke="#8A8F94" stroke-width="1.6"/>
+      <path d="M382 62 L374 92 M382 62 L392 92" stroke="#55585C" stroke-width="2.4" fill="none"/>
+      <g>
+        <rect x="300" y="88" width="166" height="14" rx="6" fill="#F7F3E8" stroke="#D9CBB4" stroke-width="1"/>
+        <rect x="296" y="98" width="174" height="62" rx="7" fill="#F5C518" stroke="#D9A50F" stroke-width="2"/>
+        <g fill="#BFE3F2" stroke="#D9A50F" stroke-width="1.4">
+          <rect x="306" y="106" width="26" height="22" rx="3"/>
+          <rect x="338" y="106" width="26" height="22" rx="3"/>
+          <rect x="370" y="106" width="26" height="22" rx="3"/>
+          <rect x="402" y="106" width="26" height="22" rx="3"/>
+          <rect x="434" y="106" width="24" height="40" rx="3"/>
+        </g>
+        <line x1="446" y1="106" x2="446" y2="146" stroke="#D9A50F" stroke-width="1.4"/>
+        <rect x="306" y="90" width="26" height="11" rx="3" fill="#fff" stroke="#D9A50F"/>
+        <text x="319" y="99.5" font-size="9.5" font-weight="700" text-anchor="middle" fill="#2B2B2B" font-family="Segoe UI, sans-serif">28</text>
+        <rect x="296" y="146" width="174" height="6" fill="#C24438"/>
+        <rect x="302" y="156" width="162" height="7" rx="3" fill="#55585C"/>
+        <circle cx="330" cy="166" r="7" fill="#3A3A3A"/><circle cx="436" cy="166" r="7" fill="#3A3A3A"/>
+        <circle cx="330" cy="166" r="2.5" fill="#8A8F94"/><circle cx="436" cy="166" r="2.5" fill="#8A8F94"/>
+        <circle cx="464" cy="136" r="3.5" fill="#FFF3C4" stroke="#D9A50F"/>
+      </g>
+    </svg>
+  </div>
+
+  <header class="top">
+    <div class="logo" title="Portugal">
+      <svg viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+        <rect width="60" height="40" fill="#DA291C"/>
+        <rect width="24" height="40" fill="#046A38"/>
+        <circle cx="24" cy="20" r="10" fill="none" stroke="#FFE900" stroke-width="3"/>
+        <ellipse cx="24" cy="20" rx="4.5" ry="10" fill="none" stroke="#FFE900" stroke-width="1.4"/>
+        <line x1="14" y1="20" x2="34" y2="20" stroke="#FFE900" stroke-width="1.4"/>
+        <rect x="19.5" y="14" width="9" height="11" rx="2.5" fill="#fff" stroke="#DA291C" stroke-width="1.6"/>
+        <g fill="#1D50A0">
+          <circle cx="24" cy="19.5" r="1.2"/>
+          <circle cx="21.6" cy="17" r="1.2"/><circle cx="26.4" cy="17" r="1.2"/>
+          <circle cx="21.6" cy="22" r="1.2"/><circle cx="26.4" cy="22" r="1.2"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h1>Português — Vokabeltrainer</h1>
+      <div class="subtitle">Europäisches Portugiesisch · Grundwortschatz A1 &amp; A2</div>
+    </div>
+  </header>
+
+  <div id="voiceWarn" class="warn">
+    Hinweis: Auf diesem Gerät ist keine portugiesische Stimme (pt-PT) installiert.
+    Das Audio nutzt ersatzweise eine andere Stimme. Für beste Aussprache eine
+    portugiesische Sprachausgabe in den Systemeinstellungen hinzufügen.
+  </div>
+
+  <!-- Modus-Tabs -->
+  <div class="segment" id="modeSeg">
+    <button data-mode="lessons" class="active">Lektionen</button>
+    <button data-mode="learn">Lernen</button>
+    <button data-mode="flash">Karten</button>
+    <button data-mode="quiz">Quiz</button>
+    <button data-mode="type">Schreiben</button>
+    <button data-mode="list">Liste</button>
+  </div>
+
+  <!-- Aktuelle Auswahl -->
+  <div class="scope-bar" id="scopeBar">
+    <div>
+      <div class="scope-label">Aktuelle Lektion</div>
+      <div class="scope-title" id="scopeTitle">—</div>
+    </div>
+    <button class="scope-change" id="changeScope" type="button">Wechseln</button>
+  </div>
+
+  <!-- Richtung -->
+  <div class="dir-row" id="dirRow">
+    <span>Richtung:</span>
+    <div class="dir-toggle" id="dirToggle">
+      <button data-dir="ptde" class="active">🇵🇹 PT → DE</button>
+      <button data-dir="dept">DE → PT 🇵🇹</button>
+    </div>
+  </div>
+
+  <!-- ===== LEKTIONS-ÜBERSICHT ===== -->
+  <section class="panel active" id="panel-lessons">
+    <div class="segment" id="ovLevelSeg" style="margin-top:0">
+      <button data-level="A1" class="active">Stufe A1</button>
+      <button data-level="A2">Stufe A2</button>
+    </div>
+    <div class="ov-head">
+      <h2>Lektion wählen</h2>
+      <span class="level-summary" id="levelSummary"></span>
+    </div>
+    <div class="lesson-grid" id="lessonGrid"></div>
+    <div class="scope-shortcuts">
+      <button class="shortcut-btn" id="scopeLevel" type="button">📚 Ganze Stufe gemischt üben</button>
+      <button class="shortcut-btn" id="scopeAll" type="button">🌍 Alle Vokabeln (A1 + A2)</button>
+    </div>
+  </section>
+
+  <!-- ===== LERNEN ===== -->
+  <section class="panel" id="panel-learn">
+    <div class="stats">
+      <div class="stats-head">
+        <div>
+          <div class="stats-title">Fortschritt</div>
+          <div class="stats-sub" id="statsTotal"></div>
+        </div>
+        <span class="stats-pct" id="statsPct">0 %</span>
+      </div>
+      <div class="bar">
+        <div class="seg-known" id="segKnown" style="width:0"></div>
+        <div class="seg-progress" id="segProgress" style="width:0"></div>
+        <div class="seg-wrong" id="segWrong" style="width:0"></div>
+        <div class="seg-new" id="segNew" style="width:0"></div>
+      </div>
+      <div class="legend">
+        <span><i class="dot known"></i> Gemeistert (10×): <b id="cntKnown">0</b></span>
+        <span><i class="dot progress"></i> In Arbeit: <b id="cntProgress">0</b></span>
+        <span><i class="dot wrong"></i> Zuletzt falsch: <b id="cntWrong">0</b></span>
+        <span><i class="dot new"></i> Neu: <b id="cntNew">0</b></span>
+      </div>
+    </div>
+
+    <div id="learnArea">
+      <div class="card-stage">
+        <div class="flashcard" id="learnCard">
+          <div class="face front">
+            <span class="queue-badge" id="lnQueueLeft"></span>
+            <div class="pill" id="lnCat">—</div>
+            <div class="learn-bar-row">
+              <span class="mini-track"><span class="mini-fill" id="lnBarFill"></span></span>
+              <span class="bar-text" id="lnBarText"></span>
+            </div>
+            <div class="word-pt" id="lnFront">—</div>
+            <button class="speak-btn" id="lnSpeak" type="button">🔊 Anhören</button>
+          </div>
+        </div>
+      </div>
+      <button class="reveal-hint-btn" id="lnReveal" type="button">Übersetzung aufdecken</button>
+      <div id="lnAnswer" style="display:none">
+        <div class="learn-actions">
+          <button class="learn-btn again" id="lnAgain" type="button">Nochmal</button>
+          <button class="learn-btn good" id="lnGood" type="button">Gewusst ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state" id="learnEmpty" style="display:none">
+      <div class="big">🎉</div>
+      <h3 id="emptyTitle">Alles wiederholt!</h3>
+      <p id="emptyMsg"></p>
+      <p id="emptyNext"></p>
+    </div>
+
+    <div class="reset-row">
+      <button class="link-btn" id="resetProgress" type="button">Fortschritt für diese Auswahl zurücksetzen</button>
+    </div>
+  </section>
+
+  <!-- ===== KARTEN ===== -->
+  <section class="panel" id="panel-flash">
+    <div class="card-stage">
+      <div class="flashcard" id="flashcard">
+        <div class="face front">
+          <div class="pill" id="fcCatFront">—</div>
+          <div class="word-pt" id="fcFront">—</div>
+          <button class="speak-btn" id="fcSpeakFront" type="button">🔊 Anhören</button>
+          <div class="tap-hint">Karte antippen zum Umdrehen</div>
+        </div>
+        <div class="face back">
+          <div class="pill" id="fcCatBack">Deutsch</div>
+          <div class="word-de" id="fcBack">—</div>
+          <div class="word-sub" id="fcBackSub"></div>
+          <button class="speak-btn" id="fcSpeakBack" type="button">🔊 Anhören</button>
+          <div class="tap-hint">Karte antippen zum Zurückdrehen</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn ghost" id="fcShuffle" type="button" title="Mischen">🔀</button>
+      <button class="nav-btn" id="fcPrev" type="button">‹ Zurück</button>
+      <span class="counter" id="fcCounter">1 / 1</span>
+      <button class="nav-btn" id="fcNext" type="button">Weiter ›</button>
+    </div>
+    <div class="progress"><div id="fcProgress"></div></div>
+  </section>
+
+  <!-- ===== QUIZ ===== -->
+  <section class="panel" id="panel-quiz">
+    <div class="quiz-card">
+      <div class="quiz-prompt-label" id="quizLabel">Was bedeutet dieses Wort?</div>
+      <div class="quiz-word" id="quizWord">—</div>
+      <button class="speak-btn" id="quizSpeak" type="button">🔊 Anhören</button>
+      <div class="options" id="quizOptions"></div>
+    </div>
+    <div class="scorebar">
+      <span>Punkte: <span class="score-num" id="quizScore">0</span> / <span id="quizTotal">0</span></span>
+      <button class="nav-btn ghost" id="quizRestart" type="button">Neu starten</button>
+    </div>
+  </section>
+
+  <!-- ===== SCHREIBEN ===== -->
+  <section class="panel" id="panel-type">
+    <div class="quiz-card">
+      <div class="quiz-prompt-label">Wie heißt das auf Portugiesisch? · <span id="typeLesson"></span></div>
+      <div class="quiz-word" id="typeWord">—</div>
+      <input class="type-input" id="typeInput" type="text" placeholder="Auf Portugiesisch eingeben …"
+             autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+      <div class="accents" id="accRow"></div>
+      <div class="fb" id="typeFb"></div>
+      <div class="learn-actions">
+        <button class="nav-btn" id="typeCheck" type="button">Prüfen</button>
+        <button class="nav-btn" id="typeNext" type="button" style="display:none">Weiter ›</button>
+      </div>
+    </div>
+    <div class="scorebar">
+      <span>Richtig: <span class="score-num" id="typeScore">0</span> / <span id="typeTotal">0</span></span>
+      <button class="nav-btn ghost" id="typeRestart" type="button">Neu starten</button>
+    </div>
+  </section>
+
+  <!-- ===== LISTE ===== -->
+  <section class="panel" id="panel-list">
+    <input class="search" id="listSearch" type="text" placeholder="Suchen … (z. B. 'sete' oder 'Freitag')" />
+    <div class="list-head"><span id="listCount"></span></div>
+    <div id="listContainer"></div>
+  </section>
+
+  <p class="note">
+    Tipp: Der Artikel (o/a) gehört zum Wort — beim Schreiben darfst du ihn aber weglassen.<br>
+    Dein Lernfortschritt wird automatisch in diesem Browser gespeichert. · Boa sorte! 🇵🇹
+  </p>
+</div>
+
+<script src="vokabeln.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
