@@ -200,10 +200,16 @@
   .learn-btn.good { background: var(--good); color: #fff; box-shadow: 0 6px 16px rgba(47,163,107,.3); }
   .learn-btn.good:hover { filter: brightness(1.04); }
   .reveal-hint-btn {
-    margin-top: 18px; width: 100%; border: 1px dashed #CFC4B2; background: transparent; color: var(--muted);
-    font-size: 14px; font-weight: 600; padding: 13px; border-radius: 14px; cursor: pointer;
+    margin-top: 18px; width: 100%;
+    border: 1.5px solid var(--teal);
+    background: var(--teal-soft);
+    color: var(--teal-dark);
+    font-size: 15.5px; font-weight: 700; padding: 15px; border-radius: 14px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(30,143,135,.16);
+    transition: all .15s ease;
   }
-  .reveal-hint-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+  .reveal-hint-btn:hover { background: var(--teal); color: #fff; box-shadow: 0 6px 18px rgba(30,143,135,.34); }
+  .reveal-hint-btn:active { transform: scale(.985); }
 
   .empty-state { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 40px 24px; text-align: center; }
   .empty-state .big { font-size: 44px; margin-bottom: 8px; }
@@ -471,7 +477,7 @@
           </div>
         </div>
       </div>
-      <button class="reveal-hint-btn" id="lnReveal" type="button">Übersetzung aufdecken</button>
+      <button class="reveal-hint-btn" id="lnReveal" type="button">👁️ Übersetzung aufdecken</button>
       <div id="lnAnswer" style="display:none">
         <div class="learn-actions">
           <button class="learn-btn again" id="lnAgain" type="button">Nochmal</button>

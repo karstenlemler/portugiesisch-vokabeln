@@ -30,14 +30,22 @@ function speak(text, btn) {
 const STORE_KEY = "pt-vokabel-progress-v1";
 const SCOPE_KEY = "pt-vokabel-scope-v1";
 const MASTER_COUNT = 10;   // 10× richtig = gemeistert
-const MASTER_BOX = 5;
-const BOX_INTERVAL = {
-  1: 0,
-  2: 1000 * 60 * 10,
-  3: 1000 * 60 * 60 * 24,
-  4: 1000 * 60 * 60 * 24 * 3,
-  5: 1000 * 60 * 60 * 24 * 7
-};
+
+// Wiederholungsabstand richtet sich nach der Zahl der richtigen Antworten.
+// INTERVALS[c] = Wartezeit, bis das Wort nach c richtigen Antworten wieder drankommt.
+const MIN = 1000 * 60, HOUR = MIN * 60, DAY = HOUR * 24;
+const INTERVALS = [
+  0,          // 0× richtig  → sofort
+  10 * MIN,   // 1×
+  1 * HOUR,   // 2×
+  1 * DAY,    // 3×
+  2 * DAY,    // 4×
+  4 * DAY,    // 5×
+  7 * DAY,    // 6×
+  14 * DAY,   // 7×
+  21 * DAY,   // 8×
+  30 * DAY    // 9×  (10× = gemeistert, kommt nicht mehr)
+];
 
 // Eindeutiger Schlüssel: gleiches PT-Wort kann in mehreren Lektionen
 // unterschiedliche Bedeutungen haben (z. B. "o rato" = Maus/Computer-Maus)
@@ -50,11 +58,12 @@ function loadProgress() {
   try { p = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
   catch (e) { p = {}; }
 
-  // Felder ergänzen (ältere Stände kannten c/lw noch nicht)
+  // Felder ergänzen (ältere Stände kannten c/lw noch nicht, sondern nur Leitner-Boxen 1–5)
   Object.keys(p).forEach(k => {
     const r = p[k];
-    if (typeof r.c !== "number") r.c = (r.box >= MASTER_BOX) ? MASTER_COUNT : Math.max(0, r.box || 0);
+    if (typeof r.c !== "number") r.c = (r.box >= 5) ? MASTER_COUNT : Math.max(0, r.box || 0);
     if (typeof r.lw !== "boolean") r.lw = false;
+    delete r.box; // wird nicht mehr benötigt, c steuert jetzt alles
   });
 
   // Migration: früher war der Schlüssel nur das portugiesische Wort
@@ -75,18 +84,20 @@ function loadProgress() {
 function saveProgress() {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) {}
 }
-function rec(v) { return progress[keyOf(v)] || { box: 0, last: 0, c: 0, lw: false }; }
+function rec(v) { return progress[keyOf(v)] || { last: 0, c: 0, lw: false }; }
 function isMastered(v) { return rec(v).c >= MASTER_COUNT; }
+function intervalFor(c) { return INTERVALS[Math.min(c, INTERVALS.length - 1)]; }
 function isDue(v, now) {
   const r = rec(v);
-  if (r.box === 0) return true;
-  return (now - r.last) >= BOX_INTERVAL[r.box];
+  if (r.c === 0) return true;   // noch nie richtig gewusst
+  if (r.lw) return true;        // zuletzt falsch → sofort wieder üben
+  return (now - r.last) >= intervalFor(r.c);
 }
 function statusOf(v) {
   const r = rec(v);
   if (r.c >= MASTER_COUNT) return "known";
   if (r.lw) return "wrong";
-  if (r.box > 0 || r.c > 0) return "progress";
+  if (r.c > 0) return "progress";
   return "new";
 }
 function barState(v) {
@@ -101,13 +112,22 @@ function barState(v) {
 function gradeWord(v, correct) {
   const r = rec(v);
   progress[keyOf(v)] = {
-    box: correct ? Math.min((r.box || 0) + 1, MASTER_BOX) : 1,
     last: Date.now(),
+    // Ein Fehler kostet keine bereits gesammelten Treffer, macht das Wort aber sofort wieder fällig
     c: correct ? Math.min((r.c || 0) + 1, MASTER_COUNT) : (r.c || 0),
     lw: !correct
   };
   saveProgress();
   renderStats();
+}
+
+// Lernfortschritt in Prozent: Anteil der gesammelten richtigen Antworten
+// an allen nötigen (Wörter × 10). Bewegt sich also ab der ersten Antwort.
+function progressPct(items) {
+  if (!items.length) return 0;
+  let sum = 0;
+  items.forEach(v => { sum += Math.min(rec(v).c, MASTER_COUNT); });
+  return Math.round(sum / (items.length * MASTER_COUNT) * 100);
 }
 
 /* ================= Auswahl (Lektion / Stufe / alles) ================= */
@@ -167,6 +187,7 @@ function rebuildAll() {
   buildType();
   renderList(document.getElementById("listSearch").value);
   renderStats();
+  learnQueue = [];   // Warteschlange gehört zur alten Auswahl → neu aufbauen
   renderLearn();
   renderLessonGrid();
 }
@@ -181,7 +202,7 @@ function lessonStats(id) {
     const s = statusOf(v);
     if (s === "known") known++; else if (s === "progress") prog++; else if (s === "wrong") wrong++;
   });
-  return { total: items.length, known, prog, wrong };
+  return { total: items.length, known: known, prog: prog, wrong: wrong, pct: progressPct(items) };
 }
 
 function renderLessonGrid() {
@@ -189,16 +210,17 @@ function renderLessonGrid() {
   grid.innerHTML = "";
   LESSONS.filter(l => l.level === overviewLevel).forEach(l => {
     const st = lessonStats(l.id);
-    const pct = st.total ? Math.round(st.known / st.total * 100) : 0;
+    const pct = st.pct;                       // Fortschritt = Anteil richtiger Antworten
+    const fertig = st.known === st.total;     // alle Wörter 10× gewusst
     const active = scope.type === "lesson" && scope.id === l.id;
 
     const card = document.createElement("button");
     card.type = "button";
-    card.className = "lesson-card" + (active ? " active" : "") + (pct === 100 ? " done" : "");
+    card.className = "lesson-card" + (active ? " active" : "") + (fertig ? " done" : "");
     card.innerHTML =
       '<div class="lc-head"><span class="lc-emoji"></span>' +
       '<span class="lc-nr">Lektion ' + l.nr + '</span>' +
-      (pct === 100 ? '<span class="lc-check">✓</span>' : '') + '</div>' +
+      (fertig ? '<span class="lc-check">✓</span>' : '') + '</div>' +
       '<div class="lc-title"></div>' +
       '<div class="lc-bar"><span style="width:' + pct + '%"></span></div>' +
       '<div class="lc-meta"><span></span><span class="lc-pct">' + pct + ' %</span></div>';
@@ -219,8 +241,8 @@ function renderLessonGrid() {
   const levelItems = vocab.filter(v => v.level === overviewLevel);
   const levelKnown = levelItems.filter(v => statusOf(v) === "known").length;
   document.getElementById("levelSummary").textContent =
-    levelItems.length + " Wörter · " + levelKnown + " gemeistert (" +
-    Math.round(levelKnown / levelItems.length * 100) + " %)";
+    levelItems.length + " Wörter · " + progressPct(levelItems) + " % Fortschritt · " +
+    levelKnown + " gemeistert";
 }
 
 document.getElementById("ovLevelSeg").addEventListener("click", (e) => {
@@ -255,7 +277,8 @@ function renderStats() {
     else neu++;
   });
   const total = items.length || 1;
-  document.getElementById("statsPct").textContent = Math.round(known / total * 100) + " %";
+  // Prozent = Anteil der richtigen Antworten, nicht der gemeisterten Wörter
+  document.getElementById("statsPct").textContent = progressPct(items) + " %";
   document.getElementById("segKnown").style.width = (known / total * 100) + "%";
   document.getElementById("segProgress").style.width = (prog / total * 100) + "%";
   document.getElementById("segWrong").style.width = (wrong / total * 100) + "%";
@@ -264,7 +287,10 @@ function renderStats() {
   document.getElementById("cntProgress").textContent = prog;
   document.getElementById("cntWrong").textContent = wrong;
   document.getElementById("cntNew").textContent = neu;
-  document.getElementById("statsTotal").textContent = items.length + " Wörter";
+  let sumC = 0;
+  items.forEach(v => { sumC += Math.min(rec(v).c, MASTER_COUNT); });
+  document.getElementById("statsTotal").textContent =
+    items.length + " Wörter · " + sumC + " von " + (items.length * MASTER_COUNT) + " richtigen Antworten";
 }
 
 /* ================= LERNEN ================= */
@@ -274,13 +300,24 @@ function buildLearnQueue() {
   const now = Date.now();
   const due = filtered().filter(v => !isMastered(v) && isDue(v, now));
   // Neue Wörter portionsweise: höchstens 12 unbekannte pro Runde
-  const fresh = due.filter(v => rec(v).box === 0).slice(0, 12);
-  const repeat = due.filter(v => rec(v).box > 0);
-  learnQueue = shuffle(repeat.concat(fresh)).sort((a, b) => rec(b).box - rec(a).box);
+  const fresh = shuffle(due.filter(v => rec(v).c === 0)).slice(0, 12);
+  const repeat = shuffle(due.filter(v => rec(v).c > 0));
+  learnQueue = repeat.concat(fresh); // Wiederholungen zuerst, dann neue Wörter
+}
+
+// Antwort verbuchen und zur nächsten Karte gehen.
+// "Gewusst" nimmt die Karte aus der Runde, "Nochmal" reiht sie ein paar Karten
+// später wieder ein — dadurch kommt dieselbe Karte nie sofort noch einmal.
+function answerLearn(correct) {
+  if (!learnCurrent) return;
+  gradeWord(learnCurrent, correct);
+  const card = learnQueue.shift();
+  if (!correct) learnQueue.splice(Math.min(3, learnQueue.length), 0, card);
+  renderLearn();
 }
 
 function renderLearn() {
-  buildLearnQueue();
+  if (!learnQueue.length) buildLearnQueue();
   const area = document.getElementById("learnArea");
   const empty = document.getElementById("learnEmpty");
 
@@ -298,8 +335,8 @@ function renderLearn() {
     items.forEach(v => {
       if (isMastered(v)) return;
       const r = rec(v);
-      if (r.box > 0) {
-        const t = r.last + BOX_INTERVAL[Math.min(r.box, MASTER_BOX)] - now;
+      if (r.c > 0 && !r.lw) {
+        const t = r.last + intervalFor(r.c) - now;
         if (t > 0 && t < next) next = t;
       }
     });
@@ -319,7 +356,7 @@ function renderLearn() {
   fill.style.width = st.w;
   fill.style.background = st.color;
   document.getElementById("lnBarText").textContent = st.text + " richtig";
-  document.getElementById("lnQueueLeft").textContent = learnQueue.length + " fällig";
+  document.getElementById("lnQueueLeft").textContent = "noch " + learnQueue.length;
 
   if (direction === "ptde") {
     document.getElementById("lnFront").textContent = learnCurrent.pt;
@@ -367,8 +404,8 @@ document.getElementById("learnCard").addEventListener("click", (e) => {
 document.getElementById("lnSpeak").addEventListener("click", (e) => {
   e.stopPropagation(); speak(learnCurrent.pt, e.currentTarget);
 });
-document.getElementById("lnAgain").addEventListener("click", () => { gradeWord(learnCurrent, false); renderLearn(); });
-document.getElementById("lnGood").addEventListener("click", () => { gradeWord(learnCurrent, true); renderLearn(); });
+document.getElementById("lnAgain").addEventListener("click", () => answerLearn(false));
+document.getElementById("lnGood").addEventListener("click", () => answerLearn(true));
 document.getElementById("resetProgress").addEventListener("click", () => {
   if (!confirm("Fortschritt für „" + scopeTitle() + "\" wirklich zurücksetzen?")) return;
   filtered().forEach(v => { delete progress[keyOf(v)]; });
