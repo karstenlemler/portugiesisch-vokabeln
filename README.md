@@ -3,8 +3,11 @@
 Eine Web-App zum Lernen des **europäischen portugiesischen** (pt-PT) Grundwortschatzes
 für die Niveaustufen **A1 und A2** — rund 1.290 Wörter in 43 thematischen Lektionen.
 
+**➡️ [App direkt im Browser öffnen](https://karstenlemler.github.io/portugiesisch-vokabeln/)**
+— funktioniert auch auf dem Handy.
+
 Die App läuft komplett offline im Browser. Keine Installation, kein Server,
-keine Registrierung. Einfach `index.html` öffnen.
+keine Registrierung. Alternativ einfach `index.html` lokal öffnen.
 
 ## Funktionen
 
